@@ -53,33 +53,26 @@ src/
 ```bash
 cd src/problem5
 npm install
-# This also runs `prisma generate` automatically via postinstall
 ```
 
-### 2. Configure environment
-
-```bash
-cp .env.example .env
-```
-
-| Variable       | Default              | Description                  |
-|----------------|----------------------|------------------------------|
-| `PORT`         | `3000`               | Port the server listens on   |
-| `DATABASE_URL` | `file:./dev.db`      | Path to the SQLite DB file   |
-
-### 3. Create the database
-
-```bash
-npm run db:push
-```
-
-### 4. Run in development mode
+### 2. Run in development mode
 
 ```bash
 npm run dev
 ```
 
-### 5. Build & run in production
+`predev` handles everything automatically:
+- Creates `.env` from `.env.example` if not present
+- Creates and syncs the SQLite database
+
+**That's it** — the server is ready.
+
+| Variable       | Default         | Description                |
+|----------------|-----------------|----------------------------|
+| `PORT`         | `3000`          | Port the server listens on |
+| `DATABASE_URL` | `file:./dev.db` | Path to the SQLite DB file |
+
+### 3. Build & run in production
 
 ```bash
 npm run build
