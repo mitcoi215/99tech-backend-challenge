@@ -1,8 +1,8 @@
 import express from 'express';
-import { rateLimit } from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
 import resourceRoutes from './routes/resource.routes';
 import { errorHandler } from './middlewares/errorHandler';
+import { globalLimiter } from './middlewares/rateLimiters';
 import swaggerDocument from './docs/swagger';
 
 const app = express();
@@ -11,23 +11,7 @@ const PORT = process.env.PORT ?? 3000;
 app.use(express.json());
 
 // Global rate limit — 100 requests per minute per IP
-const globalLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 100,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later.' },
-});
 app.use(globalLimiter);
-
-// Stricter limit on write operations — 30 per minute per IP
-const writeLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 30,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { error: 'Too many write requests, please slow down.' },
-});
 
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -37,7 +21,7 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.use('/resources', writeLimiter, resourceRoutes);
+app.use('/resources', resourceRoutes);
 
 app.use(errorHandler);
 

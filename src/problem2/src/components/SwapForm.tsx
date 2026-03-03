@@ -45,6 +45,13 @@ export default function SwapForm() {
   const [isSwapping, setIsSwapping] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
+  // Stable reference — setToast from useState never changes, so this callback
+  // keeps the same identity across renders. Without this, the inline arrow
+  // function passed to Toast recreates on every render, causing Toast's
+  // useEffect (which depends on onClose) to restart the 4-second timer each
+  // time the parent re-renders (e.g., while the user types in the amount field).
+  const handleCloseToast = useCallback(() => setToast(null), []);
+
   const {
     register,
     control,
@@ -233,7 +240,7 @@ export default function SwapForm() {
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => setToast(null)}
+          onClose={handleCloseToast}
         />
       )}
     </>

@@ -94,7 +94,11 @@ const WalletPage: React.FC<Props> = ({ children, ...rest }) => {
     );
   });
 
-  return <div {...rest}>{rows}</div>;
+  // Render children after wallet rows so any supplementary UI passed by the
+  // parent (e.g. total balance, footer) is preserved. The original code
+  // declared children in Props but never rendered them — silently dropping
+  // anything a caller passed in.
+  return <div {...rest}>{rows}{children}</div>;
 };
 
 export default WalletPage;
