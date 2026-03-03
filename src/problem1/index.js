@@ -16,6 +16,11 @@
  *
  * Time complexity:  O(1) — single arithmetic operation regardless of n
  * Space complexity: O(1) — no extra memory allocated
+ *
+ * Precision note: the problem guarantees the *result* fits in
+ * Number.MAX_SAFE_INTEGER, but the intermediate product n * (n + 1) overflows
+ * that bound when n ≳ 94,906,265. For a strictly safe implementation use BigInt:
+ *   return Number((BigInt(n) * (BigInt(n) + 1n)) / 2n);
  */
 var sum_to_n_a = function (n) {
   if (!Number.isInteger(n) || n <= 0) return 0;

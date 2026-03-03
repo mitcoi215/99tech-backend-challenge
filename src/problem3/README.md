@@ -130,7 +130,28 @@ component state) — or use `useCallback` with an empty dependency array.
 
 ---
 
-### 7. React Anti-Patterns
+### 7. Missing `prices` Entry Produces NaN (Crash Risk)
+
+```tsx
+// ❌ If prices API doesn't include this currency, result is NaN
+const usdValue = prices[balance.currency] * balance.amount;
+```
+
+`prices` comes from an external API and may not contain every currency a wallet
+holds. `undefined * number` evaluates to `NaN`, which silently breaks any
+downstream formatting (`.toFixed`, `.toLocaleString`) and renders as an empty
+field, or throws if passed to a component expecting a number.
+
+**Fix:**
+
+```tsx
+const tokenPrice = prices[balance.currency] ?? 0;
+const usdValue = tokenPrice * balance.amount;
+```
+
+---
+
+### 8. React Anti-Patterns
 
 ```tsx
 // ❌ Array index as key — breaks reconciliation on reorder / filter
@@ -140,6 +161,8 @@ component state) — or use `useCallback` with an empty dependency array.
 Using the array index as a key means React cannot identify individual items
 after sorting or filtering changes. Use a stable, unique identifier such as
 `${balance.blockchain}-${balance.currency}`.
+
+---
 
 ---
 
@@ -157,4 +180,5 @@ See [`index.tsx`](./index.tsx) for the corrected implementation.
 - Rendered from `formattedBalances` so `.formatted` is actually defined
 - Added `blockchain: string` to `WalletBalance` interface
 - Replaced `any` with `string` in `getPriority`
+- Added `?? 0` guard on `prices[balance.currency]` to prevent NaN
 - Used composite stable key instead of array index

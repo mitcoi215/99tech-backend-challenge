@@ -77,7 +77,12 @@ const WalletPage: React.FC<Props> = ({ children, ...rest }) => {
 
   // Fix #4: iterate `formattedBalances` so `.formatted` is always defined.
   const rows = formattedBalances.map((balance: FormattedWalletBalance) => {
-    const usdValue = prices[balance.currency] * balance.amount;
+    // Guard against a missing price entry — `prices` is an external API response
+    // and may not contain every currency. Without the fallback, undefined * amount
+    // produces NaN, which React renders as an empty string and breaks downstream
+    // formatting (toFixed, toLocaleString, etc.).
+    const tokenPrice = prices[balance.currency] ?? 0;
+    const usdValue = tokenPrice * balance.amount;
     return (
       // Fix #7: stable composite key instead of array index.
       <WalletRow

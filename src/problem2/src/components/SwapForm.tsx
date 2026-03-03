@@ -108,6 +108,12 @@ export default function SwapForm() {
               inputMode="decimal"
               placeholder="0.00"
               {...register('fromAmount')}
+              // Block characters that type="number" accepts but make no sense here:
+              // 'e'/'E' (scientific notation), '+'/'-' (sign). Users should only
+              // be able to enter positive decimals.
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+              }}
               className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-gray-600 outline-none min-w-0
                 [appearance:textfield]
                 [&::-webkit-outer-spin-button]:appearance-none
