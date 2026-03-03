@@ -132,6 +132,28 @@ Returns the current Top-10. Served from Redis cache, invalidated on every score 
 
 ---
 
+### WebSocket Event: `leaderboard_update`
+
+Pushed to all connected clients whenever the Top-10 ranking changes (triggered by any score update).
+
+**Event payload:**
+```json
+{
+  "event": "leaderboard_update",
+  "data": {
+    "updated_at": "2024-03-01T12:00:05.000Z",
+    "entries": [
+      { "rank": 1, "user_id": "u_abc", "username": "Alice", "score": 981 },
+      { "rank": 2, "user_id": "u_def", "username": "Bob",   "score": 875 }
+    ]
+  }
+}
+```
+
+Clients should listen for this event on connection and update the leaderboard UI on receipt — no polling required.
+
+---
+
 ## Security Model
 
 | Layer | Mechanism | Purpose |
