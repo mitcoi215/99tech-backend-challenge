@@ -27,10 +27,21 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Strip trailing zeros from a fixed-precision string.
+ * e.g. "1.500000" → "1.5", "1.000000" → "1"
+ * Input is always the output of .toFixed(6), so it's safe to use parseFloat.
+ */
+function trimTrailingZeros(fixed: string): string {
+  return parseFloat(fixed).toString();
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function SwapForm() {
-  const { tokens, loading: pricesLoading } = useTokenPrices();
+  const { tokens, loading: pricesLoading, error: pricesError } = useTokenPrices();
   const [isSwapping, setIsSwapping] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
@@ -62,12 +73,12 @@ export default function SwapForm() {
 
   const toAmount =
     fromPrice && toPrice && !isNaN(numericAmount) && numericAmount > 0
-      ? ((numericAmount * fromPrice) / toPrice).toFixed(6)
+      ? trimTrailingZeros(((numericAmount * fromPrice) / toPrice).toFixed(6))
       : '';
 
   const exchangeRate =
     fromPrice && toPrice && fromToken && toToken
-      ? (fromPrice / toPrice).toLocaleString(undefined, { maximumSignificantDigits: 6 })
+      ? trimTrailingZeros((fromPrice / toPrice).toFixed(6))
       : null;
 
   function handleFlipTokens() {
@@ -81,9 +92,12 @@ export default function SwapForm() {
     try {
       await new Promise<void>((resolve) => setTimeout(resolve, 1500));
       setToast({
-        message: `Successfully swapped ${values.fromAmount} ${values.fromToken} → ${toAmount} ${values.toToken}`,
+        message: `Swapped ${values.fromAmount} ${values.fromToken} → ${toAmount} ${values.toToken}`,
         type: 'success',
       });
+      // Clear the amount after a successful swap so the user starts fresh.
+      // Token selections are intentionally kept — most users swap the same pair repeatedly.
+      setValue('fromAmount', '', { shouldValidate: false });
     } catch {
       setToast({ message: 'Swap failed. Please try again.', type: 'error' });
     } finally {
@@ -92,6 +106,9 @@ export default function SwapForm() {
   }
 
   if (pricesLoading) return <SwapSkeleton />;
+
+  // Surface the fetch error rather than silently showing an empty, broken form.
+  if (pricesError) return <FetchError message={pricesError} />;
 
   return (
     <>
@@ -239,6 +256,21 @@ function Panel({
       <label className="text-xs text-gray-400 mb-2 block">{label}</label>
       {children}
       {error && <p className="text-red-400 text-xs mt-2">{error}</p>}
+    </div>
+  );
+}
+
+function FetchError({ message }: { message: string }) {
+  return (
+    <div className="bg-surface-800 border border-red-500/20 rounded-3xl p-8 text-center shadow-2xl">
+      <div className="text-red-400 text-3xl mb-3" aria-hidden="true">⚠</div>
+      <p className="text-red-300 font-medium text-sm">{message}</p>
+      <button
+        onClick={() => window.location.reload()}
+        className="mt-4 text-xs text-gray-400 hover:text-white transition-colors underline underline-offset-2"
+      >
+        Retry
+      </button>
     </div>
   );
 }
